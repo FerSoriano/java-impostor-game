@@ -5,10 +5,7 @@ import dao.WordsDAO;
 import utils.Menu;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class Game {
     public void startGame(Scanner scanner, PlayerManager playerManager, PlayersDAO playersDAO) {
@@ -40,23 +37,42 @@ public class Game {
         }
 
         boolean running = true;
+        boolean invalidOption;
         while (running) {
             if (words.isEmpty()) {
                 Menu.showErrorMessage("No quedan mas palabras disponibles. Elige otra categoria.");
                 return;
             }
             String word = getRandomWord(words);
-//            System.out.println("\nPalabra seleccionada: " + word);
-            // todo: crear funcion para asignar las palabras a los jugadores
-            Menu.showGameMenu();
-            int option;
-            option = scanner.nextInt();
-            scanner.nextLine();
-            switch (option) {
-                case 1 -> words.remove(word);
-                case 2 -> running = false;
-                default -> System.out.println("Opcion Incorrecta. Intenta de nuevo");
+            List<List<String>> playersList = setWordsToPlayers(word, playerManager.getPlayers());
+
+            /// test block
+            System.out.println("ASIGNANDO PALABRAS ALEATORIO...");
+            System.out.println("OBTENIENDO AL IMPOSTOR...");
+            System.out.println("--------------------------------");
+            for (List<String> strings : playersList) {
+                for (String s : strings) {
+                    System.out.print(s + " ");
+                }
+                System.out.println();
             }
+            ///
+
+            do {
+                invalidOption = false;
+                Menu.showGameMenu();
+                int option;
+                option = scanner.nextInt(); // add exception
+                scanner.nextLine();
+                switch (option) {
+                    case 1 -> words.remove(word);
+                    case 2 -> running = false;
+                    default -> invalidOption = true;
+                }
+                if (invalidOption) {
+                    System.out.println("Opcion Incorrecta. Intenta de nuevo");
+                }
+            } while (invalidOption);
         }
 
     }
@@ -112,5 +128,31 @@ public class Game {
         Random random = new Random();
         int randomIndex = random.nextInt(words.size());
         return words.get(randomIndex);
+    }
+
+    private int getImpostor(ArrayList<Player> players) {
+        Random random = new Random();
+        return random.nextInt(players.size());
+    }
+
+    private List<List<String>> setWordsToPlayers(String word, ArrayList<Player> players) {
+        int impostorIndex = getImpostor(players);
+
+        List<List<String>> playersList = new ArrayList<>();
+
+        for (int i = 0; i < players.size(); i++){
+            List<String> playersInfo = new ArrayList<>();
+            playersInfo.add(players.get(i).getName());
+            playersInfo.add(players.get(i).getEmail());
+
+            if (i == impostorIndex) {
+                playersInfo.add("IMPOSTOR");
+            } else {
+                playersInfo.add(word.trim());
+            }
+
+            playersList.add(playersInfo);
+        }
+        return playersList;
     }
 }
