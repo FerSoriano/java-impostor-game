@@ -57,9 +57,9 @@ public class Game {
             List<List<String>> playersList = setWordsToPlayers(word, playerManager.getPlayers());
 
             /// test block
-            System.out.println("ASIGNANDO PALABRAS ALEATORIO...");
+            System.out.println("\nASIGNANDO PALABRAS ALEATORIO...");
             System.out.println("OBTENIENDO AL IMPOSTOR...");
-            System.out.println("--------------------------------");
+            System.out.println("\n--------------------------------");
             for (List<String> strings : playersList) {
                 for (String s : strings) {
                     System.out.print(s + " ");
@@ -68,11 +68,17 @@ public class Game {
             }
             ///
 
+            int option;
             do {
                 invalidOption = false;
                 Menu.showGameMenu();
-                int option;
-                option = scanner.nextInt(); // add exception
+                if (!scanner.hasNextInt()) {
+                    Menu.showErrorMessage("Opcion incorrecta. Intenta de nuevo.");
+                    scanner.next();
+                    invalidOption = true;
+                    continue;
+                }
+                option = scanner.nextInt();
                 scanner.nextLine();
                 switch (option) {
                     case 1 -> words.remove(word);
