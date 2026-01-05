@@ -27,8 +27,18 @@ public class Game {
             } while (playerManager.getPlayers().size() <= 1);
         }
 
-        String category = showAndSelectCategory(scanner);
+        ArrayList<String> categories = getCategories();
+        Integer categoryIndex;
+        do {
+            showCategories(categories);
+            categoryIndex = selectCategory(scanner, categories);
+        } while (categoryIndex == null);
 
+        if (categoryIndex == -1) {
+            return;
+        }
+
+        String category = categories.get(categoryIndex);
         WordsDAO wordsDAO = new WordsDAO(category);
         List<String> words = wordsDAO.loadWords();
         if (words.isEmpty()) {
@@ -77,51 +87,66 @@ public class Game {
 
     }
 
-    private String showAndSelectCategory(Scanner scanner) {
+    private ArrayList<String> getCategories() {
+        ArrayList<String> files = new ArrayList<>();
         final String DIR = "data";
         File dir = new File(DIR);
-        ArrayList<String> files = new ArrayList<>();
-
         String[] filesList = dir.list();
-
-        System.out.println("\nSelecciona una categoria:");
-        int count = 0;
-        for (String f : filesList) {
-            if (f.endsWith(".csv")) {
-                String[] split = f.split("\\.");
-                String s = split[0];
-                String properCaseFile = s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
-                if (s.equalsIgnoreCase("paises_ciudades")) {
-                    properCaseFile = "Paises y Ciudades";
+        if (filesList != null) {
+            for (String f : filesList) {
+                if (f.endsWith(".csv")) {
+                    String[] split = f.split("\\.");
+                    String s = split[0];
+                    files.add(s);
                 }
-                count++;
-                System.out.println(count + ") " + properCaseFile);
-                files.add(s);
             }
         }
+        return files;
+    }
 
-        if (files.isEmpty()) {
+    private void showCategories(ArrayList<String> categories) {
+        if (categories.isEmpty()) {
             Menu.showErrorMessage("No se encontraron categorias disponibles.");
+            return;
+        }
+
+        int count = 0;
+        System.out.println("\nSelecciona una categoria:");
+        for (String category : categories) {
+            String properCaseFile = category.substring(0, 1).toUpperCase() + category.substring(1).toLowerCase();
+            if (category.equalsIgnoreCase("paises_ciudades")) {
+                properCaseFile = "Paises y Ciudades";
+            }
+            count++;
+            System.out.println(count + ") " + properCaseFile);
+        }
+
+        int backOption = ++count;
+        System.out.println(backOption + ") Regresar al menu anterior");
+        System.out.print(">: ");
+    }
+
+    private Integer selectCategory(Scanner scanner, ArrayList<String> categories) {
+        int option;
+        if (!scanner.hasNextInt()) {
+            Menu.showErrorMessage("Opcion incorrecta. Intenta de nuevo.");
+            scanner.next();
             return null;
         }
 
-        System.out.print(">: ");
-        int option;
-        while (!scanner.hasNextInt()) {
-            Menu.showErrorMessage("Opcion incorrecta. Intenta de nuevo.");
-            scanner.next();
-        }
-        do {
-            option = scanner.nextInt();
-            scanner.nextLine();
-            if (option <= 0 || option > files.size()) {
-                Menu.showErrorMessage("Opcion incorrecta. Intenta de nuevo.");
-                continue;
-            }
-            break;
-        } while (true);
+        option = scanner.nextInt();
+        scanner.nextLine();
 
-        return files.get(option - 1);
+        if (option == categories.size() + 1) {
+            return -1; // back
+        }
+
+        if (option <= 0 || option > categories.size()) {
+            Menu.showErrorMessage("Opcion incorrecta. Intenta de nuevo.");
+            return null;
+        }
+
+        return option - 1;
     }
 
     private String getRandomWord(List<String> words) {
